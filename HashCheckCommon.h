@@ -19,7 +19,7 @@ extern "C" {
 #include "libs/WinHash.h"
 
 // Tuning constants
-#define MAX_PATH_BUFFER       0x800
+#define MAX_PATH_BUFFER       0x8000
 #define READ_BUFFER_SIZE      0x40000
 #define BASE_STACK_SIZE       0x1000
 #define MARQUEE_INTERVAL      100  // marquee progress bar animation interval
@@ -86,6 +86,8 @@ typedef struct {
 
 // Convenience wrappers
 HANDLE __fastcall OpenFileForReading( PCTSTR pszPath );
+DWORD __fastcall GetFileAttributes_Long( PCTSTR lpFileName );
+HANDLE __fastcall FindFirstFile_Long( PCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData );
 
 // Parsing helpers
 VOID __fastcall HCNormalizeString( PTSTR psz );

@@ -9,6 +9,7 @@
 #include "CHashCheck.hpp"
 #include "HashCheckUI.h"
 #include "HashCheckOptions.h"
+#include "HashCheckCommon.h"
 
 CHashCheck::CHashCheck( )
 {
@@ -54,8 +55,6 @@ STDMETHODIMP CHashCheck::QueryInterface( REFIID riid, LPVOID *ppv )
 
 STDMETHODIMP CHashCheck::Initialize( LPCITEMIDLIST pidlFolder, LPDATAOBJECT pdtobj, HKEY hkeyProgID )
 {
-	// We'll be needing a buffer, and let's double it just to be safe
-	TCHAR szPath[MAX_PATH << 1];
 
 	// Make sure that we are working with a fresh list
 	SLRelease(m_hList);
@@ -75,9 +74,18 @@ STDMETHODIMP CHashCheck::Initialize( LPCITEMIDLIST pidlFolder, LPDATAOBJECT pdto
 
 			for (UINT uDrop = 0; uDrop < uDrops; ++uDrop)
 			{
-				if (DragQueryFile(hDrop, uDrop, szPath, countof(szPath)))
+				UINT cchPath = DragQueryFile(hDrop, uDrop, NULL, 0);
+				if (cchPath > 0)
 				{
-					SLAddStringI(m_hList, szPath);
+					LPTSTR lpszPath = (LPTSTR)malloc((cchPath + 1) * sizeof(TCHAR));
+					if (lpszPath)
+					{
+						if (DragQueryFile(hDrop, uDrop, lpszPath, cchPath + 1))
+						{
+							SLAddStringI(m_hList, lpszPath);
+						}
+						free(lpszPath);
+					}
 				}
 			}
 
@@ -285,7 +293,7 @@ STDMETHODIMP CHashCheck::Drop( LPDATAOBJECT pdtobj, DWORD grfKeyState, POINTL pt
 					HANDLE hThread;
 
 					if ( (DragQueryFile(hDrop, uDrop, lpszPath, cchPath + 1) == cchPath) &&
-					     (!(GetFileAttributes(lpszPath) & FILE_ATTRIBUTE_DIRECTORY)) &&
+					     (!(GetFileAttributes_Long(lpszPath) & FILE_ATTRIBUTE_DIRECTORY)) &&
 					     (hThread = CreateThreadCRT(HashVerifyThread, lpszPath)) )
 					{
 						// The thread should free lpszPath, not us

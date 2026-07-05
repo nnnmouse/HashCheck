@@ -114,7 +114,7 @@ BOOL WINAPI HashCalcPrepare( PHASHCALCCONTEXT phcctx )
 		{
 			// Finally, we can do the actual work that's needed!
 
-			if (GetFileAttributes(pszCurrent) & FILE_ATTRIBUTE_DIRECTORY)
+			if (GetFileAttributes_Long(pszCurrent) & FILE_ATTRIBUTE_DIRECTORY)
 			{
 				if (cchCurrent < MAX_PATH_BUFFER - 2)
 				{
@@ -159,7 +159,7 @@ VOID WINAPI HashCalcWalkDirectory( PHASHCALCCONTEXT phcctx, PTSTR pszPath, UINT 
 	*pszPathAppend = TEXT('\\');
 	SSCpy2Ch(++pszPathAppend, TEXT('*'), 0);
 
-	if ((hFind = FindFirstFile(pszPath, &finddata)) == INVALID_HANDLE_VALUE)
+	if ((hFind = FindFirstFile_Long(pszPath, &finddata)) == INVALID_HANDLE_VALUE)
 		return;
 
 	do

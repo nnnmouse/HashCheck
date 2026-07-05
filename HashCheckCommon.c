@@ -11,7 +11,7 @@
 #include "globals.h"
 #include "HashCheckCommon.h"
 #include "GetHighMSB.h"
-#include <Strsafe.h>
+#include <strsafe.h>
 
 #define PROGRESS_BAR_STEPS 300
 
@@ -45,17 +45,56 @@ HANDLE __fastcall CreateThreadCRT( PVOID pThreadProc, PVOID pvParam )
 	));
 }
 
+static PCTSTR MakeLongPath(PCTSTR pszPath, PTSTR szBuffer, SIZE_T cchBuffer)
+{
+    if (!pszPath) return NULL;
+
+    // Already prefixed
+    if (pszPath[0] == TEXT('\\') && pszPath[1] == TEXT('\\') &&
+       (pszPath[2] == TEXT('?') || pszPath[2] == TEXT('.')) && pszPath[3] == TEXT('\\'))
+        return pszPath;
+
+    // Network UNC path: \\server\share -> \\?\UNC\server\share
+    if (pszPath[0] == TEXT('\\') && pszPath[1] == TEXT('\\')) {
+        if (SUCCEEDED(StringCchPrintf(szBuffer, cchBuffer, TEXT("\\\\?\\UNC\\%s"), pszPath + 2)))
+            return szBuffer;
+    }
+    // Local Drive path: C:\folder -> \\?\C:\folder
+    else if (((pszPath[0] >= TEXT('A') && pszPath[0] <= TEXT('Z')) || 
+              (pszPath[0] >= TEXT('a') && pszPath[0] <= TEXT('z'))) &&
+             pszPath[1] == TEXT(':') && (pszPath[2] == TEXT('\\') || pszPath[2] == TEXT('/'))) {
+        if (SUCCEEDED(StringCchPrintf(szBuffer, cchBuffer, TEXT("\\\\?\\%s"), pszPath)))
+            return szBuffer;
+    }
+
+    return pszPath;
+}
+
 HANDLE __fastcall OpenFileForReading( PCTSTR pszPath )
 {
-	return(CreateFile(
-		pszPath,
+	TCHAR szLongPath[MAX_PATH_BUFFER];
+
+	return CreateFile(
+		MakeLongPath(pszPath, szLongPath, MAX_PATH_BUFFER),
 		GENERIC_READ,
 		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		NULL,
 		OPEN_EXISTING,
 		FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
 		NULL
-	));
+	);
+}
+
+DWORD __fastcall GetFileAttributes_Long(PCTSTR lpFileName)
+{
+    TCHAR szLongPath[MAX_PATH_BUFFER];
+    return GetFileAttributes(MakeLongPath(lpFileName, szLongPath, MAX_PATH_BUFFER));
+}
+
+HANDLE __fastcall FindFirstFile_Long(PCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
+{
+    TCHAR szLongPath[MAX_PATH_BUFFER];
+    return FindFirstFile(MakeLongPath(lpFileName, szLongPath, MAX_PATH_BUFFER), lpFindFileData);
 }
 
 VOID __fastcall HCNormalizeString( PTSTR psz )

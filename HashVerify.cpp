@@ -71,7 +71,7 @@ typedef struct {
 	FILESIZE           filesize;
 	PTSTR              pszDisplayName;
 	PTSTR              pszExpected;
-	INT16              cchDisplayName;
+	INT32              cchDisplayName;
 	INT                nListviewIndex;
 	BOOL               bBeenSeen;    // has the listview control asked for this item's info yet?
 	UINT8              uState;
@@ -306,7 +306,7 @@ VOID WINAPI HashVerifyParseData( PHASHVERIFYCONTEXT phvctx )
 		PTSTR pszStartOfLine;  // First non-whitespace character of the line
 		PTSTR pszEndOfLine;    // Last non-whitespace character of the line
 		PTSTR pszChecksum = NULL, pszFileName = NULL;
-		INT16 cchPath;         // This INCLUDES the NULL terminator!
+		INT32 cchPath;         // This INCLUDES the NULL terminator!
 
 		// Step 1: Isolate the current line as a NULL-terminated string
 		{
